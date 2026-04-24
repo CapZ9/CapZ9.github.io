@@ -4,35 +4,98 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Barcode Generator</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <style>
-    body { font-family: Arial; text-align: center; margin-top: 50px; }
-    input { margin: 5px; padding: 8px; }
-    button { padding: 10px 15px; }
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #333;
+    }
+
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      width: 320px;
+      text-align: center;
+      animation: fadeIn 0.4s ease;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 10px;
+      background: #2a5298;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #1e3c72;
+    }
+
     #app { display: none; }
+
+    #result {
+      margin-top: 15px;
+      font-size: 14px;
+      word-break: break-all;
+    }
+
+    svg {
+      margin-top: 15px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
 
-<div id="login">
+<div id="login" class="card">
   <h2>Enter Password</h2>
   <input type="password" id="password" placeholder="Password">
   <button onclick="checkPassword()">Login</button>
 </div>
 
-<div id="app">
-  <h2>Sainsbury's Barcode Generator</h2>
+<div id="app" class="card">
+  <h2>Barcode Generator</h2>
   <input type="text" id="product" placeholder="Product Code">
-  <input type="number" id="price" placeholder="Price (e.g. 150 for £1.50)">
-  <br>
-  <button onclick="generate()">Generate Barcode</button>
-  <h3 id="result"></h3>
+  <input type="number" id="price" placeholder="Price (e.g. 150 = £1.50)">
+  <button onclick="generate()">Generate</button>
+  <div id="result"></div>
   <svg id="barcode"></svg>
 </div>
 
 <script>
-  const PASSWORD = "1234"; // change this
+  const PASSWORD = "2763";
 
   function checkPassword() {
     const input = document.getElementById("password").value;
@@ -77,13 +140,19 @@
     const product = document.getElementById("product").value;
     const price = document.getElementById("price").value;
 
+    if (!product || !price) {
+      alert("Enter both fields");
+      return;
+    }
+
     const barcodeValue = generateSainsburysBarcode(product, price);
 
     document.getElementById("result").innerText = barcodeValue;
 
     JsBarcode("#barcode", barcodeValue, {
       format: "CODE128",
-      displayValue: true
+      displayValue: true,
+      fontSize: 14
     });
   }
 </script>
