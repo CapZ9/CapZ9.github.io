@@ -5,73 +5,109 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Barcode Generator</title>
+  <title>Sains Generator</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+
   <style>
+    * { box-sizing: border-box; }
+
     body {
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      background: linear-gradient(135deg, #1e3c72, #2a5298);
       margin: 0;
       height: 100vh;
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at top, #ff7a18, #2b0a05);
       display: flex;
       justify-content: center;
       align-items: center;
-      color: #333;
+      color: white;
     }
 
-    .card {
-      background: white;
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      width: 320px;
-      text-align: center;
-      animation: fadeIn 0.4s ease;
+    .glass {
+      width: 360px;
+      padding: 24px;
+      border-radius: 24px;
+      backdrop-filter: blur(20px);
+      background: rgba(255,255,255,0.08);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.15);
+      animation: fade 0.4s ease;
     }
 
-    h2 {
+    h1 {
+      font-size: 20px;
       margin-bottom: 20px;
+      text-align: left;
+    }
+
+    label {
+      font-size: 12px;
+      opacity: 0.7;
+      display: block;
+      margin-top: 12px;
+      margin-bottom: 6px;
     }
 
     input {
       width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      outline: none;
+      background: rgba(255,255,255,0.12);
+      color: white;
       font-size: 14px;
     }
 
-    button {
-      width: 100%;
-      padding: 12px;
+    input::placeholder { color: rgba(255,255,255,0.5); }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
       margin-top: 10px;
-      border: none;
-      border-radius: 10px;
-      background: #2a5298;
-      color: white;
-      font-size: 15px;
+    }
+
+    .chip {
+      padding: 10px;
+      border-radius: 12px;
+      text-align: center;
+      background: rgba(255,255,255,0.12);
       cursor: pointer;
       transition: 0.2s;
     }
 
-    button:hover {
-      background: #1e3c72;
+    .chip:hover { background: rgba(255,255,255,0.25); }
+
+    .generate {
+      margin-top: 16px;
+      width: 100%;
+      padding: 12px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #ff7a18, #ffb347);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
     }
 
+    .generate:hover { transform: scale(1.03); }
+
+    .result-card {
+      margin-top: 20px;
+      background: white;
+      color: black;
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    #barcode { margin-top: 10px; }
+
+    #login { text-align: center; }
     #app { display: none; }
 
-    #result {
-      margin-top: 15px;
-      font-size: 14px;
-      word-break: break-all;
-    }
-
-    svg {
-      margin-top: 15px;
-    }
-
-    @keyframes fadeIn {
+    @keyframes fade {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
@@ -79,19 +115,34 @@
 </head>
 <body>
 
-<div id="login" class="card">
-  <h2>Enter Password</h2>
+<div id="login" class="glass">
+  <h1>Enter Password</h1>
   <input type="password" id="password" placeholder="Password">
-  <button onclick="checkPassword()">Login</button>
+  <button class="generate" onclick="checkPassword()">Unlock</button>
 </div>
 
-<div id="app" class="card">
-  <h2>Barcode Generator</h2>
-  <input type="text" id="product" placeholder="Product Code">
-  <input type="number" id="price" placeholder="Price (e.g. 150 = £1.50)">
-  <button onclick="generate()">Generate</button>
-  <div id="result"></div>
-  <svg id="barcode"></svg>
+<div id="app" class="glass">
+  <h1>Sains Generator</h1>
+
+  <label>PRODUCT BARCODE</label>
+  <input type="text" id="product" placeholder="01799095">
+
+  <label>SELECT PRICE</label>
+  <div class="buttons">
+    <div class="chip" onclick="setPrice(10)">10p</div>
+    <div class="chip" onclick="setPrice(49)">49p</div>
+    <div class="chip" onclick="setPrice(100)">£1</div>
+    <div class="chip" onclick="customPrice()">Custom</div>
+  </div>
+
+  <input type="number" id="price" placeholder="Custom price (e.g. 150)">
+
+  <button class="generate" onclick="generate()">Generate</button>
+
+  <div class="result-card" id="resultBox" style="display:none;">
+    <div id="result"></div>
+    <svg id="barcode"></svg>
+  </div>
 </div>
 
 <script>
@@ -105,6 +156,14 @@
     } else {
       alert("Wrong password");
     }
+  }
+
+  function setPrice(p) {
+    document.getElementById("price").value = p;
+  }
+
+  function customPrice() {
+    document.getElementById("price").focus();
   }
 
   function padLeft(str, length) {
@@ -147,6 +206,7 @@
 
     const barcodeValue = generateSainsburysBarcode(product, price);
 
+    document.getElementById("resultBox").style.display = "block";
     document.getElementById("result").innerText = barcodeValue;
 
     JsBarcode("#barcode", barcodeValue, {
