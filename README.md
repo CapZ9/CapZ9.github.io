@@ -67,9 +67,6 @@ input{
   margin-top:8px;
 }
 
-.row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
-.chip{background:rgba(255,255,255,0.15);padding:10px;border-radius:12px;text-align:center;cursor:pointer}
-
 .result{background:white;color:black;margin-top:20px;padding:12px;border-radius:12px;text-align:center}
 </style>
 </head>
@@ -145,27 +142,65 @@ function calcCheck(input){
  return (10-(sum%10))%10;
 }
 
+/* SAINS */
 function genSains(){
  let p=document.getElementById("sainsProduct").value.replace(/\D/g,'').slice(0,13);
  p=padLeft(p,13);
  let price=padLeft(document.getElementById("sainsPrice").value,6);
  let base=`91${p}${price}`;
  let code=base+calcCheck(base);
+
  document.getElementById("sainsOut").style.display="block";
  document.getElementById("sainsText").innerText=code;
  JsBarcode("#sainsBarcode",code);
 }
 
+/* ✅ FIXED ASDA LOGIC */
+function generateAsdaStyleBarcode(ean13, pricePounds) {
+    const cleanEAN = ean13.replace(/\D/g, '').slice(0, 13);
+    if (cleanEAN.length !== 13) {
+        throw new Error("EAN must be 13 digits");
+    }
+
+    const prefix = "510";
+    const suffix = "1960";
+
+    const pricePence = Math.round(pricePounds * 100);
+    const priceBlock = pricePence.toString().padStart(5, '0');
+
+    const base = prefix + cleanEAN + priceBlock + suffix;
+
+    let sum = 0;
+    for (let i = 0; i < base.length; i++) {
+        const digit = parseInt(base[base.length - 1 - i], 10);
+        const weight = (i % 2 === 0) ? 3 : 1;
+        sum += digit * weight;
+    }
+
+    const checkDigit = (10 - (sum % 10)) % 10;
+
+    return base + checkDigit;
+}
+
 function genAsda(){
- let e=document.getElementById("asdaProduct").value.replace(/\D/g,'').slice(0,13);
- if(e.length!==13){alert("EAN must be 13 digits");return}
- let price=Math.round(parseFloat(document.getElementById("asdaPrice").value)*100);
- let block=price.toString().padStart(5,'0');
- let base="51"+e+block+"1960";
- let code=base+calcCheck(base);
- document.getElementById("asdaOut").style.display="block";
- document.getElementById("asdaText").innerText=code;
- JsBarcode("#asdaBarcode",code);
+  try {
+    const ean = document.getElementById("asdaProduct").value;
+    const price = parseFloat(document.getElementById("asdaPrice").value);
+
+    if (isNaN(price)) {
+      alert("Enter a valid price");
+      return;
+    }
+
+    const code = generateAsdaStyleBarcode(ean, price);
+
+    document.getElementById("asdaOut").style.display = "block";
+    document.getElementById("asdaText").innerText = code;
+
+    JsBarcode("#asdaBarcode", code);
+  } catch (err) {
+    alert(err.message);
+  }
 }
 </script>
 
