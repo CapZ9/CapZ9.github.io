@@ -3,219 +3,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Generator Hub</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barcode Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #333;
+    }
 
-<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      width: 320px;
+      text-align: center;
+      animation: fadeIn 0.4s ease;
+    }
 
-<style>
-*{box-sizing:border-box}
+    h2 {
+      margin-bottom: 20px;
+    }
 
-body{
-  margin:0;
-  height:100vh;
-  font-family:Inter, sans-serif;
-  background:linear-gradient(160deg,#000000,#1a1a1a);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  color:white;
-}
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
 
-.glass{
-  width:380px;
-  padding:24px;
-  border-radius:24px;
-  backdrop-filter:blur(20px);
-  background:rgba(255,255,255,0.05);
-  border:1px solid rgba(255,255,255,0.1);
-  box-shadow:0 20px 50px rgba(0,0,0,0.6);
-}
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 10px;
+      background: #2a5298;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
 
-h1{font-size:20px;margin-bottom:20px}
+    button:hover {
+      background: #1e3c72;
+    }
 
-button{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:14px;
-  margin-top:10px;
-  cursor:pointer;
-  font-weight:bold;
-}
+    #app { display: none; }
 
-.menu-btn{background:linear-gradient(135deg,#444,#222);color:white}
+    #result {
+      margin-top: 15px;
+      font-size: 14px;
+      word-break: break-all;
+    }
 
-input{
-  width:100%;
-  padding:12px;
-  border-radius:12px;
-  border:none;
-  margin-top:8px;
-}
+    svg {
+      margin-top: 15px;
+    }
 
-.result{
-  background:white;
-  color:black;
-  margin-top:20px;
-  padding:12px;
-  border-radius:12px;
-  text-align:center;
-}
-
-#app,#sains,#asda{display:none}
-
-.sains-theme{
-  background: radial-gradient(circle at top, #ff7a18, #2b0a05);
-}
-
-.asda-theme{
-  background: radial-gradient(circle at top, #3bd16f, #06210d);
-}
-</style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
-
 <body>
 
-<!-- LOGIN -->
-<div id="login" class="glass">
-  <h1>Enter Password</h1>
-  <input type="password" id="password">
-  <button onclick="login()">Enter</button>
+<div id="login" class="card">
+  <h2>Enter Password</h2>
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="checkPassword()">Login</button>
 </div>
 
-<!-- MENU -->
-<div id="app" class="glass">
-  <h1>Select Generator</h1>
-  <button class="menu-btn" onclick="openSains()">Sainsbury's Generator</button>
-  <button class="menu-btn" onclick="openAsda()">ASDA Generator</button>
-</div>
-
-<!-- SAINS -->
-<div id="sains" class="glass sains-theme">
-  <h1>Sains Generator</h1>
-  <input id="sainsProduct" placeholder="Product Code">
-  <input id="sainsPrice" placeholder="Price (£)">
-  <button onclick="genSains()">Generate</button>
-
-  <div class="result" id="sainsOut" style="display:none">
-    <div id="sainsText"></div>
-    <svg id="sainsBarcode"></svg>
-  </div>
-</div>
-
-<!-- ASDA -->
-<div id="asda" class="glass asda-theme">
-  <h1>ASDA Generator</h1>
-  <input id="asdaProduct" placeholder="EAN-13">
-  <input id="asdaPrice" placeholder="Price (£)">
-  <button onclick="genAsda()">Generate</button>
-
-  <div class="result" id="asdaOut" style="display:none">
-    <div id="asdaText"></div>
-    <svg id="asdaBarcode"></svg>
-  </div>
+<div id="app" class="card">
+  <h2>Barcode Generator</h2>
+  <input type="text" id="product" placeholder="Product Code">
+  <input type="number" id="price" placeholder="Price (e.g. 150 = £1.50)">
+  <button onclick="generate()">Generate</button>
+  <div id="result"></div>
+  <svg id="barcode"></svg>
 </div>
 
 <script>
-const PASSWORD = "2763";
+  const PASSWORD = "2763";
 
-/* ================= LOGIN ================= */
-function login(){
-  if(document.getElementById("password").value === PASSWORD){
-    document.getElementById("login").style.display = "none";
-    document.getElementById("app").style.display = "block";
-  } else alert("wrong");
-}
-
-function openSains(){
-  document.getElementById("app").style.display = "none";
-  document.getElementById("sains").style.display = "block";
-}
-
-function openAsda(){
-  document.getElementById("app").style.display = "none";
-  document.getElementById("asda").style.display = "block";
-}
-
-/* ================= HELPERS ================= */
-function padLeft(str,len){
-  return str.toString().padStart(len,'0');
-}
-
-/* ================= SAINS CHECK ================= */
-function calcSainsCheck(input){
-  let sum = 0;
-  for(let i=0;i<input.length;i++){
-    const d = parseInt(input[input.length-1-i],10);
-    sum += d * (i%2===0 ? 3 : 1);
+  function checkPassword() {
+    const input = document.getElementById("password").value;
+    if (input === PASSWORD) {
+      document.getElementById("login").style.display = "none";
+      document.getElementById("app").style.display = "block";
+    } else {
+      alert("Wrong password");
+    }
   }
-  return (10-(sum%10))%10;
-}
 
-/* ================= ASDA CHECK ================= */
-function calcAsdaCheck(input){
-  let sum = 0;
-  for(let i=0;i<input.length;i++){
-    const d = parseInt(input[input.length-1-i],10);
-    sum += d * (i%2===0 ? 3 : 1);
+  function padLeft(str, length) {
+    return str.toString().padStart(length, '0');
   }
-  return (10-(sum%10))%10;
-}
 
-/* ================= SAINS ================= */
-function genSains(){
-  let p = document.getElementById("sainsProduct").value.replace(/\D/g,'').slice(0,13);
-  p = padLeft(p,13);
-
-  let price = parseFloat(document.getElementById("sainsPrice").value);
-  if(isNaN(price)){ alert("Invalid price"); return; }
-
-  let priceBlock = Math.round(price*100).toString().padStart(6,'0');
-
-  let base = `91${p}${priceBlock}`;
-  let code = base + calcSainsCheck(base);
-
-  document.getElementById("sainsOut").style.display="block";
-  document.getElementById("sainsText").innerText=code;
-
-  document.getElementById("sainsBarcode").innerHTML="";
-  JsBarcode("#sainsBarcode",String(code));
-}
-
-/* ================= ASDA ================= */
-function generateAsdaBarcode(ean13, pricePounds){
-  const cleanEAN = ean13.replace(/\D/g,'').slice(0,13);
-  if(cleanEAN.length!==13) throw new Error("EAN must be 13 digits");
-
-  const priceBlock = Math.round(pricePounds*100).toString().padStart(5,'0');
-
-  const base = "510" + cleanEAN + priceBlock + "1960";
-  const check = calcAsdaCheck(base);
-
-  return base + check;
-}
-
-function genAsda(){
-  try{
-    const ean = document.getElementById("asdaProduct").value;
-    const price = parseFloat(document.getElementById("asdaPrice").value);
-
-    if(isNaN(price)){ alert("Invalid price"); return; }
-
-    const code = generateAsdaBarcode(ean,price);
-
-    document.getElementById("asdaOut").style.display="block";
-    document.getElementById("asdaText").innerText=code;
-
-    document.getElementById("asdaBarcode").innerHTML="";
-    JsBarcode("#asdaBarcode",String(code));
-
-  } catch(err){
-    alert(err.message);
+  function calculateCheckDigit(input) {
+    let sum = 0;
+    for (let i = 0; i < input.length; i++) {
+      const digit = parseInt(input[input.length - 1 - i], 10);
+      const weight = (i % 2 === 0) ? 3 : 1;
+      sum += digit * weight;
+    }
+    let checkDigit = (10 - (sum % 10)) % 10;
+    if (checkDigit % 2 === 0) {
+      checkDigit = (checkDigit + 1) % 10;
+    }
+    return checkDigit;
   }
-}
+
+  function generateSainsburysBarcode(productCode, price) {
+    let numericProduct = productCode.replace(/\D/g, '').slice(0, 13);
+    numericProduct = padLeft(numericProduct, 13);
+    const paddedPrice = padLeft(price, 6);
+
+    const baseNumber = `91${numericProduct}${paddedPrice}`;
+    const checkDigit = calculateCheckDigit(baseNumber);
+
+    return `${baseNumber}${checkDigit}`;
+  }
+
+  function generate() {
+    const product = document.getElementById("product").value;
+    const price = document.getElementById("price").value;
+
+    if (!product || !price) {
+      alert("Enter both fields");
+      return;
+    }
+
+    const barcodeValue = generateSainsburysBarcode(product, price);
+
+    document.getElementById("result").innerText = barcodeValue;
+
+    JsBarcode("#barcode", barcodeValue, {
+      format: "CODE128",
+      displayValue: true,
+      fontSize: 14
+    });
+  }
 </script>
 
 </body>
