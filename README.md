@@ -173,7 +173,7 @@ function generateAsdaStyleBarcode(ean13, pricePounds) {
     let sum = 0;
     for (let i = 0; i < base.length; i++) {
         const digit = parseInt(base[base.length - 1 - i], 10);
-        const weight = (i % 2 === 0) ? 3 : 1;
+        const weight = (i % 2 === 0) ? 1 : 3; // <-- FIX APPLIED
         sum += digit * weight;
     }
 
