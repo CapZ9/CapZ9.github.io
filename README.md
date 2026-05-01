@@ -155,34 +155,35 @@ function genSains(){
  JsBarcode("#sainsBarcode",code);
 }
 
-/* ✅ FIXED ASDA LOGIC */
-function generateAsdaStyleBarcode(ean13, pricePounds) {
-    const cleanEAN = ean13.replace(/\D/g, '').slice(0, 13);
-    if (cleanEAN.length !== 13) {
-        throw new Error("EAN must be 13 digits");
-    }
+/* ✅ FIXED ASDA LOGIC (CORRECT VERSION) */
+function generateAsdaBarcode(ean13, pricePounds) {
+  const cleanEAN = ean13.replace(/\D/g, '').slice(0, 13);
+  if (cleanEAN.length !== 13) {
+    throw new Error("EAN must be 13 digits");
+  }
 
-    const prefix = "510";
-    const suffix = "1960";
+  const pricePence = Math.round(pricePounds * 100);
+  const priceBlock = pricePence.toString().padStart(5, '0');
 
-    const pricePence = Math.round(pricePounds * 100);
-    const priceBlock = pricePence.toString().padStart(5, '0');
+  const prefix = "510";
+  const constant = "1960";
 
-    const base = prefix + cleanEAN + priceBlock + suffix;
+  const base = prefix + cleanEAN + priceBlock + constant;
 
-    let sum = 0;
-    for (let i = 0; i < base.length; i++) {
-        const digit = parseInt(base[base.length - 1 - i], 10);
-        const weight = (i % 2 === 0) ? 1 : 3; // <-- FIX APPLIED
-        sum += digit * weight;
-    }
+  // Correct checksum (RIGHT → LEFT, weight starts at 1)
+  let sum = 0;
+  for (let i = 0; i < base.length; i++) {
+    const digit = parseInt(base[base.length - 1 - i], 10);
+    const weight = (i % 2 === 0) ? 1 : 3;
+    sum += digit * weight;
+  }
 
-    const checkDigit = (10 - (sum % 10)) % 10;
+  const checkDigit = (10 - (sum % 10)) % 10;
 
-    return base + checkDigit;
+  return base + checkDigit;
 }
 
-function genAsda(){
+function genAsda() {
   try {
     const ean = document.getElementById("asdaProduct").value;
     const price = parseFloat(document.getElementById("asdaPrice").value);
@@ -192,7 +193,7 @@ function genAsda(){
       return;
     }
 
-    const code = generateAsdaStyleBarcode(ean, price);
+    const code = generateAsdaBarcode(ean, price);
 
     document.getElementById("asdaOut").style.display = "block";
     document.getElementById("asdaText").innerText = code;
