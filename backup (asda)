@@ -1,0 +1,31 @@
+function generateAsdaBarcode(ean13, pricePounds) {
+    // Ensure only digits in EAN
+    const cleanEAN = ean13.replace(/\D/g, '').slice(0, 13);
+
+    if (cleanEAN.length !== 13) {
+        throw new Error("EAN must be 13 digits");
+    }
+
+    // Convert price (£ → pence) and pad to 5 digits
+    const pricePence = Math.round(pricePounds * 100);
+    const priceBlock = pricePence.toString().padStart(5, '0');
+
+    const prefix = "51";
+    const constant = "1960";
+
+    // Build base (without check digit)
+    const base = prefix + cleanEAN + priceBlock + constant;
+
+    // Calculate check digit (EAN-style mod 10)
+    let sum = 0;
+    for (let i = 0; i < base.length; i++) {
+        const digit = parseInt(base[base.length - 1 - i], 10);
+        const weight = (i % 2 === 0) ? 3 : 1;
+        sum += digit * weight;
+    }
+
+    const checkDigit = (10 - (sum % 10)) % 10;
+
+    // Final barcode
+    return base + checkDigit;
+}
